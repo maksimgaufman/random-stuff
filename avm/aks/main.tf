@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
-  dns_prefix                       = var.private_cluster_enabled ? null : local.dns_prefix
-  dns_prefix_private_cluster       = var.private_cluster_enabled ? local.private_dns_prefix : null
+  dns_prefix                       = (var.private_cluster_enabled && var.private_dns_zone_id != "None" && var.private_dns_zone_id != "System") ? null : local.dns_prefix
+  dns_prefix_private_cluster       = (var.private_cluster_enabled && var.private_dns_zone_id != "None" && var.private_dns_zone_id != "System") ? local.private_dns_prefix : null
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
   kubernetes_version               = var.kubernetes_version
@@ -512,11 +512,11 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "You must set one of `var.cluster_name` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
     }
     precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
+      condition     = !var.private_cluster_enabled || var.private_dns_zone_id == "None" || var.private_dns_zone_id == "System" || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
       error_message = "When `private_cluster_enabled` is set to `true`, `dns_prefix_private_cluster` must be set."
     }
     precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix == null || var.dns_prefix == "")
+      condition     = !var.private_cluster_enabled || var.private_dns_zone_id == "None" || var.private_dns_zone_id == "System" || (var.dns_prefix == null || var.dns_prefix == "")
       error_message = "When `dns_prefix_private_cluster` is set, `dns_prefix` must not be set."
     }
     precondition {
@@ -618,4 +618,4 @@ resource "random_string" "dns_prefix" {
   numeric = true  # Include numbers
   special = false # No special characters
   upper   = false # No uppercase letters
-} 
+}
