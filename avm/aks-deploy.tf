@@ -1,5 +1,5 @@
 module "aks-module" {
-  source     = "./avm-aks"
+  source     = "./aks"
 
   name                = var.aks_name_module
   resource_group_name = var.rg_name
